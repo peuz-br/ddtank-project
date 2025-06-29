@@ -1,56 +1,69 @@
 from pynput import keyboard as kb
-import cv2
-import numpy as np
 from config import NUM_QUADRADOS_GRID
 from capture import (
-    capture_wind1, capture_wind_decimal, capture_wind2,
-    capture_angulo, capture_minimapa
+    capture_wind1,
+    capture_wind_decimal,
+    capture_wind2,
+    capture_angulo,
+    capture_minimapa
 )
 from ocr_utils import ocr_read
-from calculation import calcular_distancia
+from calculation import calcular_distancia, ajustar_forca
 
 alvos = []
 
 def definir_alvos():
-    global alvos
-    # mostra só o minimapa para clique
-    pil = capture_minimapa()
-    img = cv2.cvtColor(np.array(pil), cv2.COLOR_RGB2BGR)
-    pts = []
-    def on_click(evt,x,y,flags,_) :
-        if evt==cv2.EVENT_LBUTTONDOWN:
-            pts.append((x,y))
-            cv2.circle(img,(x,y),5,(0,0,255),-1)
-    cv2.namedWindow("Alvos"); cv2.setMouseCallback("Alvos",on_click)
-    cv2.imshow("Alvos",img); cv2.waitKey(0); cv2.destroyAllWindows()
-    if len(pts)==2:
-        alvos=pts; print("Alvos:",pts)
-    else:
-        print("Clique dois pontos (você e inimigo).")
+    img = capture_minimapa()
+    # Isso é placeholder — substitua com lógica real de encontrar pixel do jogador e alvo
+    print("⚠️  Função definir_alvos() precisa ser implementada com lógica de pixel do jogador/alvo.")
+    alvos.clear()
+    alvos.append((0, 0))
+    alvos.append((100, 0))
 
 def capturar_dados():
-    if not alvos:
-        print("Pressione F7 para definir alvos primeiro."); return
-    # OCR
-    ang   = ocr_read(capture_angulo(), "angulo")
-    d1    = ocr_read(capture_wind1(),  "vento")
-    dot   = ocr_read(capture_wind_decimal(),"vento")
-    d2    = ocr_read(capture_wind2(),  "vento")
-    vento = f"{d1}{'.' if dot=='dot' else ''}{d2}"
-    # Distância
-    (ax,_),(bx,_) = alvos
-    mm_w,_ = capture_minimapa().size
-    dist   = calcular_distancia(ax, bx, mm_w, NUM_QUADRADOS_GRID)
-    print(f"Ângulo: {ang}, Vento: {vento}, Distância: {dist:.2f} quad.")
-    
+    wind1     = int(ocr_read(capture_wind1(), kind="digits"))
+    wind_dec  = int(ocr_read(capture_wind_decimal(), kind="digits"))
+    wind2     = int(ocr_read(capture_wind2(), kind="digits"))
+    angulo    = int(ocr_read(capture_angulo(), kind="angle"))
+
+    vento_total = wind1 + wind_dec * 0.1
+
+    # isso é fictício — substitua com os pixels REAIS do jogador e do alvo
+    px_jogador = 100
+    px_alvo    = 300
+    largura_grid_px = 400
+
+    distancia = calcular_distancia(px_jogador, px_alvo, largura_grid_px, NUM_QUADRADOS_GRID)
+    forca = ajustar_forca(distancia, angulo, vento_total)
+
+    print(f"Ângulo: {angulo} | Vento: {vento_total:.1f} | Distância: {distancia:.2f} | Força sugerida: {forca}")
+
 def on_press(key):
-    if key==kb.Key.f7: definir_alvos()
-    if key==kb.Key.f8: capturar_dados()
-    if key==kb.Key.esc: return False
+    try:
+        if key == kb.Key.f7:
+
+            definir_alvos()
+            from minimap_utils import obter_posicoes
+            jogador, inimigo = obter_posicoes()
+            if jogador and inimigo:
+                    print(f"Sua posição no minimapa: {jogador[:2]}")
+                    print(f"Inimigo mais distante: {inimigo[:2]}")
+            else:
+                    print("Jogador ou inimigo não detectado no minimapa.")
+        elif key == kb.Key.f8:
+            capturar_dados()
+        elif key == kb.Key.esc:
+            print("Encerrando…")
+            return False
+    except Exception as e:
+        print("Erro durante execução:", e)
 
 def main():
-    print("F7=alvos, F8=tirar dados, ESC=sair")
-    with kb.Listener(on_press=on_press): kb.Listener.join()
+    print("🎯 Pressione F7 para definir alvos")
+    print("💨 Pressione F8 para capturar vento e ângulo")
+    print("🛑 Pressione ESC para sair")
+    with kb.Listener(on_press=on_press) as listener:
+        listener.join()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
