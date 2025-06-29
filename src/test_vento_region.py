@@ -3,7 +3,7 @@ import time
 
 # Coordena­das que você mediu (ajuste se quiser testar variações)
 X1, Y1, X2, Y2 = 478, 22, 521, 43
-
+        
 if __name__ == "__main__":
     print("Em 2 segundos vou capturar a região de vento...")
     time.sleep(2)
