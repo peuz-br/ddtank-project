@@ -10,6 +10,14 @@ from config import (
     MINIMAPA_BOX
 )
 
+from PIL import ImageGrab
+import numpy as np
+
+def capture_region(box):
+    """Captura uma região da tela definida por (x1, y1, x2, y2)."""
+    img = ImageGrab.grab(bbox=box)
+    return np.array(img)
+
 def activate_window():
     wins = gw.getWindowsWithTitle(WINDOW_TITLE)
     if not wins:

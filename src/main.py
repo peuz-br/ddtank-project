@@ -1,6 +1,8 @@
+import math
 from pynput import keyboard as kb
 from config import NUM_QUADRADOS_GRID
 from capture import (
+     
     capture_wind1,
     capture_wind_decimal,
     capture_wind2,
@@ -46,10 +48,12 @@ def on_press(key):
             from minimap_utils import obter_posicoes
             jogador, inimigo = obter_posicoes()
             if jogador and inimigo:
-                    print(f"Sua posição no minimapa: {jogador[:2]}")
-                    print(f"Inimigo mais distante: {inimigo[:2]}")
+                    print(f"Sua posição no minimapa (grid): {jogador}")
+                    print(f"Inimigo mais distante (grid): {inimigo}")
+                    distancia = math.dist(jogador, inimigo)
+                    print(f"Distância estimada: {distancia:.2f}")
             else:
-                    print("Jogador ou inimigo não detectado no minimapa.")
+                     print("Jogador ou inimigo não detectado no minimapa.")
         elif key == kb.Key.f8:
             capturar_dados()
         elif key == kb.Key.esc:
